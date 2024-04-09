@@ -18,3 +18,7 @@ if __name__=="__main__":        ## 이것이 메인 실행파일이다 명시하
 
 
 print("testtest")
+
+for i in range(5):
+    print("test")
+
