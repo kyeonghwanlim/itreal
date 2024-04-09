@@ -15,3 +15,6 @@ class Main():
 
 if __name__=="__main__":        ## 이것이 메인 실행파일이다 명시하기위함.
     Main()
+
+
+print("testtest")
