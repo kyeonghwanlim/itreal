@@ -1,9 +1,14 @@
 from ui.ui import *
+
+import platform
+
 ##import ui.ui as eee  ##2번안
 ##from ui.ui import Ui_calss  ##UI 폴더의 UI py 의 Ui_class 가져옴
 class Main():
     def __init__(self):
         print("실행할 메인 클래스")
+
+        print(platform.architecture())
 
         Ui_calss()
 
