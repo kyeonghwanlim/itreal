@@ -18,7 +18,7 @@ class Kiwoom(QAxWidget):
         self.use_money_percent = 0.5
 
         ############ 변수 모음
-        self.account_dict = {}
+        self.account_stock_dict = {}
 
 
         self.get_ocx_instance()
@@ -53,14 +53,14 @@ class Kiwoom(QAxWidget):
     def get_account_info(self):
         account_list = self.dynamicCall(("GetLoginInfo(String)"),"ACCNO")
 
-        self.accoount_num = account_list.split(';')[0]                  #계좌 리스트 중 ; 로나눠서 리스트로 만듬,
+        self.account_num = account_list.split(';')[0]                  #계좌 리스트 중 ; 로나눠서 리스트로 만듬,
 
-        print("나의 보유 계좌번호 %s " % self.accoount_num)                 #8074761211
+        print("나의 보유 계좌번호 %s " % self.account_num)                 #8074761211
 
 
     def detail_account_info(self):                             ##예수금상세 TR 목록  (KOA 의 opw00001 에 정보 입력하여 TR요청을하고)
         print("예수금 요청하는 부분")
-        self.dynamicCall("SetInputValue(String, String)", "계좌번호", self.accoount_num)
+        self.dynamicCall("SetInputValue(String, String)", "계좌번호", self.account_num)
         self.dynamicCall("SetInputValue(String, String)", "비밀번호", "0000")
         self.dynamicCall("SetInputValue(String, String)", "비밀번호입력매체구분", "00") # 함수 호출이므로 리스트 딕셔너리 구분이 무의미함
         self.dynamicCall("SetInputValue(String, String)", "조회구분", "2")
@@ -71,7 +71,7 @@ class Kiwoom(QAxWidget):
 
     def detail_account_mystock(self, sPrevNext="0"):
         print("계좌평가 잔고내역 요청")
-        self.dynamicCall("SetInputValue(QString, QString)", "계좌번호", self.accoount_num)
+        self.dynamicCall("SetInputValue(QString, QString)", "계좌번호", self.account_num)
         self.dynamicCall("SetInputValue(QString, QString)", "비밀번호", "0000")
         self.dynamicCall("SetInputValue(QString, QString)", "비밀번호입력매체구분", "00")  # 함수 호출이므로 리스트 딕셔너리 구분이 무의미함
         self.dynamicCall("SetInputValue(QString, QString)", "조회구분", "2")
@@ -101,8 +101,8 @@ class Kiwoom(QAxWidget):
             self.use_money = self.use_money / 4
 
             ok_deposit = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, 0, "출금가능금액")
-            print("출금가능금액 %s" % ok_deposit)
-            int(ok_deposit)
+            print("출금가능금액 %s" % int(ok_deposit))
+
 
             self.detail_account_info_event_loop.exit()
 
@@ -134,7 +134,7 @@ class Kiwoom(QAxWidget):
                 total_chegual_price = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "매입금액")
                 possible_quantity = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "매매가능수량")
 
-                if code in self.account_dict:           ##종목명이 있을경우 패스
+                if code in self.account_stock_dict:           ##종목명이 있을경우 패스
                     pass
                 else:                                   ##종목명이 없을경우 dictionaly 에 넣어줌
                     self.account_stock_dict.update({code:{}})
@@ -142,16 +142,18 @@ class Kiwoom(QAxWidget):
 
                 code_nm = code_nm.strip()
                 stock_quantity = int(stock_quantity.strip())
-                buy_price = int(buy_price())
+                buy_price = int(buy_price.strip())
                 learn_rate = float(learn_rate.strip())                  ###수익률은 소수점까지
-                current_price = int(current_price())
+                current_price = int(current_price.strip())
                 total_chegual_price = int(total_chegual_price.strip())
+                possible_quantity = int(possible_quantity.strip())
+
 
                 self.account_stock_dict[code].update({"종목명": code_nm})
                 self.account_stock_dict[code].update({"보유수량": stock_quantity})
                 self.account_stock_dict[code].update({"매입가": buy_price})
                 self.account_stock_dict[code].update({"수익률(%)": learn_rate})
-                self.account_stock_dict[code].update({"현재가": current_price })
+                self.account_stock_dict[code].update({"현재가": current_price})
                 self.account_stock_dict[code].update({"매입금액": total_chegual_price})
                 self.account_stock_dict[code].update({'매매가능수량': possible_quantity})
 
@@ -159,7 +161,7 @@ class Kiwoom(QAxWidget):
                 cnt += 1
 
                 #####print dictionary 할경우 종목명등등 다 나옴
-            print("계좌에 가지고 있는 종목 %s" % cnt)
+            print("계좌에 가지고 있는 종목 %s" % self.account_stock_dict)
 
             self.detail_account_info_event_loop_2.exit()
 
