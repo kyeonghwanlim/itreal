@@ -9,8 +9,8 @@ class Kiwoom(QAxWidget):
         print("Kiwoom 클래스 입니다.")
         #######event loop 모음
         self.login_event_loop = None
-        self.detail_account_info_event_loop = None
-        self.detail_account_info_event_loop_2 = None
+        self.detail_account_info_event_loop = QEventLoop()
+
         #####################
 
         ############ 계좌 관련 변수
@@ -48,7 +48,7 @@ class Kiwoom(QAxWidget):
         self.dynamicCall("CommConnect()")
 
         self.login_event_loop = QEventLoop()        #이벤트루프
-        self.login_event_loop.exec_()               #로그인이 완료 될때까지 다음게 실행안되게 막음
+        self.login_event_loop.exec_()               #로그인이 완료 될때까지 다음게 실행안되게 막음 b
 
     def get_account_info(self):
         account_list = self.dynamicCall(("GetLoginInfo(String)"),"ACCNO")
@@ -70,17 +70,18 @@ class Kiwoom(QAxWidget):
         self.detail_account_info_event_loop.exec_()
 
     def detail_account_mystock(self, sPrevNext="0"):
-        print("계좌평가 잔고내역 요청")
+        print("계좌평가 잔고내역 요청하기 연속조회 %s " % sPrevNext)
+
         self.dynamicCall("SetInputValue(QString, QString)", "계좌번호", self.account_num)
         self.dynamicCall("SetInputValue(QString, QString)", "비밀번호", "0000")
         self.dynamicCall("SetInputValue(QString, QString)", "비밀번호입력매체구분", "00")  # 함수 호출이므로 리스트 딕셔너리 구분이 무의미함
         self.dynamicCall("SetInputValue(QString, QString)", "조회구분", "2")
         self.dynamicCall("CommRqData(QString, QString, int, QString)", "계좌평가잔고내역요청","OPW00018",sPrevNext, "2000")     # 0 = preNext, ScreenNumber
 
-        self.detail_account_info_event_loop_2 = QEventLoop()
-        self.detail_account_info_event_loop_2.exec_()
 
-    def trdata_slot(self, sScrNo, sRQName, sTrCode, sRecordName, sPrevNext):    #(detail_account_info 에서 요청한 값을 받아서
+        self.detail_account_info_event_loop.exec_()
+
+    def trdata_slot(self, sScrNo, sRQName, sTrCode, sRecordName, sPrevNext):    #(detail_account_info 에서 요청한 값을 받아서 PreNext 는 0또는2
         '''
         tr요청을 받는 구역이다! 슬롯이다!
         :param self:
@@ -123,7 +124,7 @@ class Kiwoom(QAxWidget):
             cnt = 0
 
             for i in range(rows):
-                code = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, cnt, "종목번호")
+                code = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "종목번호")
                 code = code.strip()[1:] ## strip   "   양쪽공백 제거    " 1은 0번다음 1부터 끝까지
 
                 code_nm = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "종목명")
@@ -162,9 +163,17 @@ class Kiwoom(QAxWidget):
 
                 #####print dictionary 할경우 종목명등등 다 나옴
             print("계좌에 가지고 있는 종목 %s" % self.account_stock_dict)
+            print("계좌에 보유종목 카운트%s" % cnt)
 
-            self.detail_account_info_event_loop_2.exit()
 
+            
+
+            if sPrevNext == "2":                    ###sPrevNext 가 없어진거같음
+                self.detail_account_mystock(sPrevNext="2")
+                print("yes")
+            else :
+                self.detail_account_info_event_loop.exit()
+                print("no")
 
 
 
