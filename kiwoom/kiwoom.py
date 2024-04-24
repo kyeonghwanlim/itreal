@@ -11,7 +11,9 @@ class Kiwoom(QAxWidget):
         self.login_event_loop = None
         self.detail_account_info_event_loop = QEventLoop()
 
-        #####################
+        ################ 스크린 번호 모음
+        self.screen_my_info= "2000"
+
 
         ############ 계좌 관련 변수
         self.use_money = 0
@@ -64,7 +66,7 @@ class Kiwoom(QAxWidget):
         self.dynamicCall("SetInputValue(String, String)", "비밀번호", "0000")
         self.dynamicCall("SetInputValue(String, String)", "비밀번호입력매체구분", "00") # 함수 호출이므로 리스트 딕셔너리 구분이 무의미함
         self.dynamicCall("SetInputValue(String, String)", "조회구분", "2")
-        self.dynamicCall("CommRqData(String, String, int, String)", "예수금상세현황요청","OPW00001","0", "2000")     # 0 = preNext, ScreenNumber
+        self.dynamicCall("CommRqData(String, String, int, String)", "예수금상세현황요청","OPW00001","0", self.screen_my_info )     # 0 = preNext, ScreenNumber
 
         self.detail_account_info_event_loop = QEventLoop()
         self.detail_account_info_event_loop.exec_()
@@ -76,8 +78,16 @@ class Kiwoom(QAxWidget):
         self.dynamicCall("SetInputValue(QString, QString)", "비밀번호", "0000")
         self.dynamicCall("SetInputValue(QString, QString)", "비밀번호입력매체구분", "00")  # 함수 호출이므로 리스트 딕셔너리 구분이 무의미함
         self.dynamicCall("SetInputValue(QString, QString)", "조회구분", "2")
-        self.dynamicCall("CommRqData(QString, QString, int, QString)", "계좌평가잔고내역요청","OPW00018",sPrevNext, "2000")     # 0 = preNext, ScreenNumber
+        self.dynamicCall("CommRqData(QString, QString, int, QString)", "계좌평가잔고내역요청","OPW00018",sPrevNext, self.screen_my_info)     # 0 = preNext, ScreenNumber
 
+
+        self.detail_account_info_event_loop.exec_()
+
+    def not_concluded_account(self, sPrevNext="0" ):
+        self.dynamicCall("SetInputValue(QString, QString)", "계좌번호", self.account_num)
+        self.dynamicCall("SetInputValue(QString, QString)", "체결구분", "1")
+        self.dynamicCall("SetInputValue(QString, QString)", "매매구분", "0")
+        self.dynamicCall("CommRqData(QString, QString, int, QString)", "실시간미체결요청", "opt10075", sPrevNext, self.screen_my_info)
 
         self.detail_account_info_event_loop.exec_()
 
@@ -176,6 +186,13 @@ class Kiwoom(QAxWidget):
                 print("no")
 
 
+        elif sRQName == "실시간미체결요청" :
+
+            rows = self.dynamicCall("GetRepeatCnt(QString, QString)", sTrCode, sRQName)
+
+            for i in range(rows):
+                code = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "종목번호")
+                code_nm = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "종목명")
 
 
 
