@@ -21,6 +21,8 @@ class Kiwoom(QAxWidget):
 
         ############ 변수 모음
         self.account_stock_dict = {}
+        self.not_account_stock_dict = {}
+        #############################
 
 
         self.get_ocx_instance()
@@ -30,7 +32,7 @@ class Kiwoom(QAxWidget):
         self.get_account_info()
         self.detail_account_info()              #에수금 가져오는 것
         self.detail_account_mystock()           #계좌평가 잔고 내역 요청
-
+        self.not_concluded_account()
 
 
     def get_ocx_instance(self):
@@ -87,6 +89,7 @@ class Kiwoom(QAxWidget):
         self.dynamicCall("SetInputValue(QString, QString)", "계좌번호", self.account_num)
         self.dynamicCall("SetInputValue(QString, QString)", "체결구분", "1")
         self.dynamicCall("SetInputValue(QString, QString)", "매매구분", "0")
+        ## 보류  self.dynamicCall("SetInputValue(QString, QString)", "종목코드", "0")
         self.dynamicCall("CommRqData(QString, QString, int, QString)", "실시간미체결요청", "opt10075", sPrevNext, self.screen_my_info)
 
         self.detail_account_info_event_loop.exec_()
@@ -186,24 +189,50 @@ class Kiwoom(QAxWidget):
                 print("no")
 
 
-        elif sRQName == "실시간미체결요청" :
+        if sRQName == "실시간미체결요청" :
 
             rows = self.dynamicCall("GetRepeatCnt(QString, QString)", sTrCode, sRQName)
 
             for i in range(rows):
                 code = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "종목번호")
                 code_nm = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "종목명")
+                order_no = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "주문번호")
                 order_status = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "주문상태")  # 접수 -> 확인 -> 체결
-                order =quantity= self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "주문수량")
+                order_quantity = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "주문수량")  # 수정
                 order_price = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "주문가격")
                 order_gubun = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "주문구분")
                 not_quantity = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "미체결수량")
                 ok_quantity = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, i, "체결량")
 
+                code = code.strip()
+                code_nm = code_nm.strip()
+                order_no = int(order_no.strip())
+                order_status = order_status.strip()
+                order_quantity = int(order_quantity.strip())
+                order_price = int(order_price.strip())
+                order_gubun = order_gubun.strip().lstrip('+').lstrip('-')       ## "+"나 "-" 기호를 제거합니다.
+                not_quantity = int(not_quantity.strip())
+                ok_quantity = int(ok_quantity.strip())
 
+                if order_no in self.not_account_stock_dict:
+                    pass
+                else:
+                    self.not_account_stock_dict[order_no] = {}                   ## 주문번호가 없으면 orde_no 딕셔너리를 생성
 
+                self.not_account_stock_dict[order_no].update({"종목코드": code})
+                self.not_account_stock_dict[order_no].update({'종목명' : code_nm})
+                self.not_account_stock_dict[order_no].update({'주문번호' : order_no})
+                self.not_account_stock_dict[order_no].update({'주문상태' : order_status})
+                self.not_account_stock_dict[order_no].update({'주문수량':order_quantity})
+                self.not_account_stock_dict[order_no].update({'주문가격' : order_price})
+                self.not_account_stock_dict[order_no].update({'주문구분' : order_gubun})
+                self.not_account_stock_dict[order_no].update({'미체결수량' : not_quantity})
+                self.not_account_stock_dict[order_no].update({'체결량' : ok_quantity})
 
+                print("미체결 종목: %s " % self.not_account_stock_dict[order_no])
 
+            self.detail_account_info_event_loop.exit()
+            print("2024-04-25 미체결출력")
 
 
 
