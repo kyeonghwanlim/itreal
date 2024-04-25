@@ -13,7 +13,7 @@ class Kiwoom(QAxWidget):
 
         ################ 스크린 번호 모음
         self.screen_my_info= "2000"
-
+        self.screen_calculation_stock = "4000"
 
         ############ 계좌 관련 변수
         self.use_money = 0
@@ -235,8 +235,24 @@ class Kiwoom(QAxWidget):
             self.detail_account_info_event_loop.exit()
             print("2024-04-25 미체결출력")
 
+    def get_code_list_by_market(self,market_code):
+        '''
+        종목 코드들 반환
+        :param market_code:
+        :return:
+        '''
+        code_list = self.dynamicCall("GetCodeListByMarket(QString)",market_code)
+        code_list = code_list.split(";")[:-1]
+
+        return code_list
 
 
+    def day_kiwoom_db(self, code=None, data=None, sPrevNext="0):
+        self.dynamicCall("SetInputValue(QString, QString)", "종목코드", code)
+        self.dynamicCall("SetInputValue(QString, QString)", "수정주가구분", "1")
 
+        if date!= None:
+            self.dynamicCall("SetInputValue(QString, QString)", "기준일자", date)
 
+        self.dynamicCall("CommRqData(QString, QString, int, QString)", "주식일봉차트조회"	, "opt10081", sPrevNext, self.screen_calculation_stock)
 
