@@ -34,6 +34,7 @@ class Kiwoom(QAxWidget):
         self.detail_account_mystock()           #계좌평가 잔고 내역 요청
         self.not_concluded_account()
 
+        self.calculator_fnc()               # 종목 분석용, 임시용으로 실행
 
     def get_ocx_instance(self):
         self.setControl("KHOPENAPI.KHOpenAPICtrl.1")
@@ -246,8 +247,17 @@ class Kiwoom(QAxWidget):
 
         return code_list
 
+    def calculator_fnc(self):
+        '''
+        종목 분석 실행용 함수
+        :return:
+        '''
+        code_list = self.get_code_list_by_market("10")
+        print("코스닥 갯수 %s" % len(code_list))
 
-    def day_kiwoom_db(self, code=None, data=None, sPrevNext="0):
+
+
+    def day_kiwoom_db(self, code=None, data=None, sPrevNext="0"):
         self.dynamicCall("SetInputValue(QString, QString)", "종목코드", code)
         self.dynamicCall("SetInputValue(QString, QString)", "수정주가구분", "1")
 
