@@ -1,4 +1,4 @@
-class RealType(object):
+class RealType(object):                 #개발가이드의 주문과 잔고처리/ sendorder 함수의 sendtype 으로 정의
     SENDTYPE = {
         '거래구분': {
             '지정가': '00',

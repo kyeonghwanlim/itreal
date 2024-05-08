@@ -36,6 +36,7 @@ class Kiwoom(QAxWidget):
         self.account_stock_dict = {}
         self.not_account_stock_dict = {}
         self.portfolio_stock_dict = {}
+        self.jango_dict = {}
         #############################
 
         ############ 종목 분석 용
@@ -78,7 +79,7 @@ class Kiwoom(QAxWidget):
 
     def real_event_slots(self):                              #실시간 데이터 요청 슬롯 (실시간 데이터들을 다 받아오는듯)
         self.OnReceiveRealData.connect(self.realdata_slot)
-
+        self.OnReceiveChejanData.connect(self.chejan_slot)     #주문을 받는 슬롯
 
     def login_slot(self,errCode):                   #슬롯
         print(errors(errCode))
@@ -546,3 +547,111 @@ class Kiwoom(QAxWidget):
 
         elif sRealType == "주식체결":       #틱이 생길때마다 Code 를 프린트하는거같음.
             print(sCode)
+
+            a = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['체결시간']) #HMMSSS
+
+            b = self.dynamicCall("GetCommRealData(QString, int)", sCode,self.realType.REALTYPE[sRealType]['현재가'])  # +(-) 2500
+            b = abs(int(b))
+
+            c = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['전일대비'])
+            c = abs(int(c))
+
+            d = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['등락율'])
+            d = float(d)
+
+            e = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['(최우선)매도호가']) #출력: +(-)2520
+            e = abs(int(e))
+
+            f = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['(최우선)매수호가']) #출력 : +(-)2515
+            f = abs(int(f))
+
+            g = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['거래량'])  #출력 : +240124 매수일때, -203403 매도일때
+            g = abs(int(g))
+
+            h = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['누적거래량'])  #출력 : 240124
+            h = abs(int(h))
+
+            i = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['고가'])  #출력 : 240124
+            i = abs(int(i))
+
+            j = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['시가'])  #출력 : 240124
+            j = abs(int(j))
+
+            k = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['저가'])  #출력 : 240124
+            k = abs(int(k))
+
+            if sCode not in self.portfolio_stock_dict:            #실시간으로 sCode 를받아오는거같은데.
+                self.portfolio_stock_dict.update({sCode:{}})
+
+            self.portfolio_stock_dict[sCode].update({"체결시간" : a})
+            self.portfolio_stock_dict[sCode].update({"현재가": b})
+            self.portfolio_stock_dict[sCode].update({"전일대비" : c})
+            self.portfolio_stock_dict[sCode].update({"등락율" : d})
+            self.portfolio_stock_dict[sCode].update({"(최우선)매도호가" : e})
+            self.portfolio_stock_dict[sCode].update({"(최우선)매수호가" : f})
+            self.portfolio_stock_dict[sCode].update({"거래량": g})
+            self.portfolio_stock_dict[sCode].update({"누적거래량" : h})
+            self.portfolio_stock_dict[sCode].update({"고가" : i})
+            self.portfolio_stock_dict[sCode].update({"시가" : j})
+            self.portfolio_stock_dict[sCode].update({"저가" : k})
+
+            print(self.portfolio_stock_dict[sCode])
+
+            # 계좌잔고평가내역에 있고 오늘 산 잔고에는 없을 경우 (계좌평가잔고내역 안)
+            if sCode in self.account_stock_dict.keys() and sCode not in self.jango_dict.keys():
+                asd = self.account_stock_dict[sCode]
+
+                meme_rate = (b - asd['매입가']) / asd['매입가'] * 100     # 구매한 종목의 현재 수익률
+
+                if asd['매입가능수량'] > 0 and (meme_rate > 5 or meme_rate < 5):
+                    order_success = self.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)", "신규매도",
+                                     self.portfolio_stock_dict[sCode]['주문용스크린번호'],self.account_num, 2,
+                                     sCode, asd['매매가능수량'], 0, self.realType.SENDTYPE['거래구분']['시장가'], "")   ###주문을하는것
+
+                    if order_success ==0:
+                        print("매도주문 전달 성공")
+                        del self.accout_stock_dict[sCode]
+                    elif :                              ### 에러코드들이 나올것임
+                        print("매도주문 전달 실패")
+
+            # 오늘 산 잔고에 있을 경우
+            elif sCode in self.jango_dict.keys():
+                print("%s %s" % ("신규매도를한다2", sCode))
+
+            # 등락율이 2.0% 이상이고 오늘 산 잔고에 없을 경우
+            elif d > 2.0 and sCode not in self.jango_dict:
+                print("%s %s" % ("신규매수를한다", sCode))
+
+            not_meme_list = list(self.not_account_stock_dict)    #dict 에  list 를 씌운것으로 , dict 의 주솟값을 따로 가져감. 같이변동되지않음 copy 를 사용해도 동일
+            for order_num in not_meme_list:     #실시간이므로 5개종목에서 6개로 바뀌었을때 에러가남 , 그래서 카피 또는 list 로 주솟값을 변경해서 사용
+                code = self.not_account_stock_dict[order_num]["종목코드"]
+                meme_price = self.not_account_stock_dict[order_num]['주문가격']
+                not_quantity = self.not_account_stock_dict[order_num]['미체결수량']
+                meme_gubun = self.not_account_stock_dict[order_num]['매도수구분']
+
+                if meme_gubun == "매수" and not_quantity > 0 and e > meme_price:
+                    print("%s %s" % ("매수취소 한다", sCode))
+
+                elif not_quantity == 0:
+                    del self.not_account_stock_dict[order_num]
+
+    def chejan_slot(self, sGubun, nItemCnt, sFIdList):
+
+        if int(sGubun) == 0 :
+            print("주문체결")
+
+        elif int(sGubun) == 1 :
+            print("잔고")
+
+
+
+
+
+
+
+
+
+
+
+
+
