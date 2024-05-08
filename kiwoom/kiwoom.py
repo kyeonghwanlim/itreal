@@ -537,6 +537,12 @@ class Kiwoom(QAxWidget):
                 print("3시30분 장 종료")
             ## GetCommRealData 로 fid 215 불러오고 , 그 값이 0인지 3인지 2인지 4인지 정보를 어디서봐야하나
 
+            elif value == '8':
+                print("장장 마감")
+
+            elif value == '9':
+                print("장 마감")
+
 
         elif sRealType == "주식체결":       #틱이 생길때마다 Code 를 프린트하는거같음.
             print(sCode)
