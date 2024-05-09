@@ -1,4 +1,5 @@
 import os
+import sys
 
 from PyQt5.QAxContainer import *
 from PyQt5.QtCore import *
@@ -76,6 +77,7 @@ class Kiwoom(QAxWidget):
     def event_slots(self):
         self.OnEventConnect.connect(self.login_slot)
         self.OnReceiveTrData.connect(self.trdata_slot)      #TR 요청. KOA Studio로 확인. 39강
+        self.OnReceiveMsg.connect(self.msg_slot)            #요청하는 모든것이 시그널이 됨, 키움에서 정보를 처리하고있는지 확인하는 메세지용도.
 
     def real_event_slots(self):                              #실시간 데이터 요청 슬롯 (실시간 데이터들을 다 받아오는듯)
         self.OnReceiveRealData.connect(self.realdata_slot)
@@ -536,8 +538,18 @@ class Kiwoom(QAxWidget):
 
             elif value == '4':
                 print("3시30분 장 종료")
-            ## GetCommRealData 로 fid 215 불러오고 , 그 값이 0인지 3인지 2인지 4인지 정보를 어디서봐야하나
 
+                for code in self.portfolio_stock_dict.keys():
+                    self.dynamicCall("SetRealRemove(String, String)", self.portfolio_stock_dict[code]['스크린번호'],code)
+
+                    QTest.qWait(5000)
+
+                self.file_delete()              ##분석파일삭제
+                self.calculator_fnc()           ##분석시작
+
+                sys.exit()
+
+            ## GetCommRealData 로 fid 215 불러오고 , 그 값이 0인지 3인지 2인지 4인지 정보를 어디서봐야하나
             elif value == '8':
                 print("장장 마감")
 
@@ -806,10 +818,14 @@ class Kiwoom(QAxWidget):
                 self.dynamicCall("SetRealRemove(QString, QString)", self.portfolio_stock_dict[sCode]['스크린번호'], sCode) #해당종목에 대해서 실시간으로 연결을 끊는다
 
 
+    #송수신 메세지 get
+    def msg_slot(self, sScrNo, sRQName, sTrCode, msg):
+        print("스크린: %s, 요청이름: %s, tr코드: %s --- %s" %(sScrNo, sRQName, sTrCode, msg))
 
-
-
-
+    #파일 삭제
+    def file_delete(self):                              ##파일삭제
+        if os.path.isfile("files/condition_stock.txt"):
+            os.remove("files/condition_stock.txt")
 
 
 
