@@ -1,6 +1,10 @@
-import os
-import sys
+import os                               #os에 파일 생성 및 데이터 입력
+import sys                              #파이썬 시스템 종료
 
+
+
+# PyQt5 라이브러리에서 QAxContainer와 Qt 모듈을 임포트합니다.
+# 또한, 에러 코드, 시험을 위한 QtTest, 그리고 키움증권 API와 관련된 사용자 정의 타입이 있는 모듈을 임포트.
 from PyQt5.QAxContainer import *
 from PyQt5.QtCore import *
 from config.errorCode import *
@@ -13,7 +17,7 @@ class Kiwoom(QAxWidget):
 
         print("Kiwoom 클래스 입니다.")
 
-        self.realType = RealType()                  # kiwoomType Realtype, sendtype 정의
+        self.realType = RealType()                  # kiwoomType.py 파일의 Realtype, sendtype 정의
 
         #######event loop 모음
         self.login_event_loop = None

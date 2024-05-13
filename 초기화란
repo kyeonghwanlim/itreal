@@ -1,0 +1,10 @@
+
+
+        ############ 변수 모음
+        self.account_stock_dict = {}
+        self.not_account_stock_dict = {}
+        self.portfolio_stock_dict = {}
+        self.jango_dict = {}
+
+- 주식관련 변수를 초기화 합니다.
+:
