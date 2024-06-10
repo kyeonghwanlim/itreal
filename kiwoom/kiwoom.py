@@ -815,7 +815,7 @@ class Kiwoom(QAxWidget):
             self.jango_dict[sCode].update({"총매입가" : total_buy_price})
             self.jango_dict[sCode].update({"매도매수구분" : meme_gubun})
             self.jango_dict[sCode].update({"(최우선)매도호가" : first_sell_price})
-            self.jango_dict[sCode].update({"(최우선)매수호가 : first_buy_price"})
+            self.jango_dict[sCode].update({"(최우선)매수호가" : first_buy_price})
 
             if stock_quan == 0:
                 del self.jango_dict[sCode]
